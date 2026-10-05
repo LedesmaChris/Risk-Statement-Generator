@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Risk Consequence & Likelihood Statement Generator</title>
+<style>
+:root{--navy:#17365d;--blue:#2563eb;--light:#f4f7fb;--border:#d7dee8;--text:#1f2937;--muted:#64748b;--green:#087443}
+*{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--light);color:var(--text)}
+header{background:linear-gradient(135deg,#17365d,#285b94);color:white;padding:26px 24px}
+header h1{margin:0 0 6px;font-size:25px} header p{margin:0;opacity:.9}
+.container{max-width:1180px;margin:24px auto;padding:0 18px}
+.tabs{display:flex;gap:8px;margin-bottom:18px}.tab{border:1px solid var(--border);background:white;padding:12px 18px;border-radius:10px 10px 0 0;cursor:pointer;font-weight:700}.tab.active{background:var(--navy);color:white;border-color:var(--navy)}
+.panel{display:none;background:white;border:1px solid var(--border);border-radius:0 12px 12px 12px;padding:24px;box-shadow:0 3px 14px #17365d12}.panel.active{display:block}
+.grid{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:start}.field{margin-bottom:16px}.field label{display:block;font-weight:700;margin-bottom:7px}.hint{font-size:12px;color:var(--muted);margin-top:5px}
+select,input,textarea{width:100%;border:1px solid #bfc9d6;border-radius:8px;padding:10px 11px;font:inherit;background:white} textarea{min-height:96px;resize:vertical}
+.output{background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:16px;white-space:pre-wrap;line-height:1.55;min-height:170px}
+.output h3{margin:0 0 10px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}button{border:0;border-radius:8px;padding:10px 15px;font-weight:700;cursor:pointer;background:var(--blue);color:white}button.secondary{background:#e2e8f0;color:#1e293b}button.green{background:var(--green)}
+.notice{padding:11px 13px;border-left:4px solid var(--blue);background:#eff6ff;border-radius:5px;margin-bottom:18px;font-size:13px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:22px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.tabs{flex-direction:column}.tab{border-radius:8px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Risk Consequence & Likelihood Statement Generator</h1>
+  <p>Web version of the supplied Excel workbook — Rev. 3</p>
+</header>
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" data-tab="consequence">Risk Consequence</button>
+    <button class="tab" data-tab="likelihood">Risk Likelihood</button>
+  </div>
+
+  <section id="consequence" class="panel active">
+    <div class="notice">Selections and generated wording mirror the workbook's dropdown lists and formulas.</div>
+    <div class="grid">
+      <div>
+        <div class="field"><label for="cRating">What is the impact if the identified risk occurred?</label><select id="cRating"></select></div>
+        <div class="field"><label for="cPart">Part/process designation</label><select id="cPart"></select></div>
+        <div class="field"><label for="cFocus">Risk Consequence is related to?</label><select id="cFocus"></select></div>
+        <div class="field"><label for="cCapability">What is the specific operational capability/objective that is affected?</label><textarea id="cCapability" placeholder="Ex. Engine performance, counterfeit detection, quality control, etc."></textarea></div>
+        <div class="field"><label for="cTechnical">How is technical performance affected?</label><textarea id="cTechnical" placeholder="Describe what would happen if the risk occurred."></textarea></div>
+        <div class="field"><label for="cDetermined">How was risk consequence determined?</label><select id="cDetermined"></select></div>
+        <div class="field"><label for="cUpdate">Risk Consequence Update?</label><select id="cUpdate"></select></div>
+        <div class="actions"><button onclick="resetConsequence()">Reset</button><button class="green" onclick="copyText('cOutput')">Copy Statement</button><button class="secondary" onclick="window.print()">Print</button></div>
+      </div>
+      <div>
+        <div class="output"><h3>Automated Generated Risk Consequence Statement</h3><div id="cOutput"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="likelihood" class="panel">
+    <div class="notice">The generated statement follows the exact concatenation logic used in the Excel workbook.</div>
+    <div class="grid">
+      <div>
+        <div class="field"><label for="lCSI">Is the end item / process CSI?</label><select id="lCSI"></select></div>
+        <div class="field"><label for="lCustomer">What Customer Data did you review?</label><select id="lCustomer"></select></div>
+        <div class="field"><label for="lCustomerResult">Was the customer data positive, negative or neutral?</label><select id="lCustomerResult"></select></div>
+        <div class="field"><label for="lDCMA">What DCMA Data did you review?</label><select id="lDCMA"></select></div>
+        <div class="field"><label for="lDCMAResult">Was the DCMA data positive, negative or neutral?</label><select id="lDCMAResult"></select></div>
+        <div class="field"><label for="lContractor">What Contractor Data did you review?</label><select id="lContractor"></select></div>
+        <div class="field"><label for="lContractorResult">Was the contractor data positive, negative or neutral?</label><select id="lContractorResult"></select></div>
+        <div class="field"><label for="lRating">Based on the data analyzed what risk likelihood are you rating this KCR?</label><select id="lRating"></select></div>
+        <div class="field"><label for="lAdditional">Additional Input</label><textarea id="lAdditional" placeholder="Write complete sentences."></textarea></div>
+        <div class="field"><label for="lChanged">Has the risk likelihood changed?</label><select id="lChanged"></select></div>
+        <div class="field"><label for="lReview">When is your next review planned?</label><select id="lReview"></select></div>
+        <div class="field"><label for="lDate">Input date risk statement was created</label><input id="lDate" type="date"></div>
+        <div class="actions"><button onclick="resetLikelihood()">Reset</button><button class="green" onclick="copyText('lOutput')">Copy Statement</button><button class="secondary" onclick="window.print()">Print</button></div>
+      </div>
+      <div>
+        <div class="output"><h3>Generated Statement</h3><div id="lOutput"></div></div>
+      </div>
+    </div>
+  </section>
+</div>
+<footer>Based on “Risk Consequence_Likelihood Statement Generator (Rev. 3).xlsx”</footer>
+
+<script>
+const L={
+ consequenceRatings:[
+ "Risk Consequence Rating of 5 - Catastrophic: Severe degradation in technical performance; Cannot meet key performance parameter, or key technical and supportability threshold; will jeopardize program success. Could result in death, permanent total disability, or irreversible environmental damage that violates law or regulation. ",
+ "Risk Consequence Rating of 4 - Critical: Significant degradation in technical performance or major shortfall in supportability; may jeopardize program success. Could result in permanent partial disability, injuries or occupational illness that may result in hospitalization of multiple personnel, or reversible environmental damage causing a violation of law or regulation.",
+ "Risk Consequence Rating of 3 - Moderate reduction in technical performance or supportability with limited impact on program objectives. Could result in injury or occupational illness resulting in one or more lost workday(s), or mitigatable environmental damage without violation of law or regulation where restoration activities can be accomplished.",
+ "Risk Consequence Rating of 2 - Minor reduction in technical performance or supportability, can be tolerated with little or no impact on program. Could result in injury or illness not resulting in a lost workday, or minimal environmental damage not violating law or regulation.",
+ "Risk Consequence Rating of 1 - Minimal or no consequence to technical performance."
+ ],
+ part:["CSI","Not CSI","CAI","Important Manufacturing Process (IMP)","Non-Critical Item or Standard Part","Commerical Off-The-Shelf"],
+ focus:["system failure","process failure","sub-process failure","product failure"],
+ updates:[
+ "No change - risk consequence rating will not change unless an engineering change occurs or additional information is introduced to cause a risk assessment change.",
+ "Yes change - Engineering change occurred ",
+ "Yes change - additional information was identified which lowered the overall risk.",
+ "Yes change - additional information was identified which increased the overall risk."
+ ],
+ determination:["contract","technical data package","QALI","letter of delegation","direct customer input","drawings","specifications","other technical data"],
+ likelihoodRatings:[
+ "Risk Rating of 5 (Very High, Almost Certain) - The process planning/procedures are undeveloped or out of date.",
+ "Risk Rating of 5 (Very High, Almost Certain) - The process is uncontrolled and frequently used.",
+ "Risk Rating of 5 (Very High, Almost Certain) - The process is not in control.",
+ "Risk Rating of 5 (Very High, Almost Certain) - The process is extremely difficult to control.",
+ "Risk Rating of 5 (Very High, Almost Certain) - The process is extremely difficult to perform.",
+ "Risk Rating of 5 (Very High, Almost Certain) - The process training/certification requirements are not met.",
+ "Risk Rating of 5 (Very High, Almost Certain) - The process is new and/or the technology is immature.",
+ "Risk Rating of 4 (High) - Process planning/procedures have been changed significantly.",
+ "Risk Rating of 4 (High) - Process planning/procedues have not been developed.",
+ "Risk Rating of 4 (High) - The process is not in complete control.",
+ "Risk Rating of 4 (High) - The process controls are not implemented.",
+ "Risk Rating of 4 (High) - The process is very difficult to control.",
+ "Risk Rating of 4 (High) - The process is very difficult to perform. ",
+ "Risk Rating of 4 (High) - Loss of personnel that were experienced with the process.",
+ "Risk Rating of 4 (High) - The process is not currently in use and required personnel training and/or certifications are not current.",
+ "Risk Rating of 4 (High) - The process is new to the supplier and requires trainined and/or certified personnel.",
+ "Risk Rating of 3 (Medium, Moderate, Probable) - Process planning/procedures have been changed.",
+ "Risk Rating of 3 (Medium, Moderate, Probable) - Process controls have not been determined.",
+ "Risk Rating of 3 (Medium, Moderate, Probable) - The process is difficult to perform.",
+ "Risk Rating of 3 (Medium, Moderate, Probable) - Personnel are not experienced with the process.",
+ "Risk Rating of 3 (Medium, Moderate, Probable) - The process is new to the supplier.",
+ "Risk Rating of 2 (Low) - It is a common process and not difficult to perform.",
+ "Risk Rating of 2 (Low) - Personnel are experienced with similar processes.",
+ "Risk Rating of 1 (Very Low, Improbable, Rare) - The process is currently in use and under control."
+ ],
+ customer:["PQDRs","Program Reviews","FAT","No Customer data available/reviewed","RFV","QALI"],
+ dcma:["Product evaluations","Process Evaluations","System Evaluations","SRS","No DCMA data available/reviewed","Inpsection System Assessment","Corrective Action Request","Counterfeit Avoidance","Letters of Delegation"],
+ contractor:["Inspection Data","QMS Audits","SPC Data","No Contractor data available/reviewed","DPU","Rework/repair Data"],
+ results:["Positive","Negative","Neutral","Both Positive and Negative."],
+ review:[
+ "A new assessment will be performed within the next 12 months to reevaluate this process risk likelihood statement.",
+ "A new assessment will be performed within the next 6 months to reevaluate this process risk likelihood statement.",
+ "A new assessment will be performed within the next 3 months to reevaluate this process risk likelihood statement.",
+ "A new assessment will be performed within the next 1 months to reevaluate this process risk likelihood statement."
+ ],
+ changed:[
+ "Initial Review - Risk likelihood had not been evaluated prior.   ",
+ "Yes - Overall risk likelihood has increased since last review. ",
+ "Yes - Overall risk likelihood has decreased since last review. ",
+ "No - Overall risk likelihood has not changed since last review. "
+ ]
+};
+function fill(id,arr,selected){const e=document.getElementById(id);e.innerHTML=arr.map((x,i)=>`<option value="${i}">${esc(x)}</option>`).join("");if(selected!==undefined)e.selectedIndex=selected;e.dispatchEvent(new Event('change'))}
+function esc(s){return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}
+function val(id){return document.getElementById(id).value}
+function copyText(id){navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>alert("Statement copied to clipboard."))}
+function generateC(){
+ const s=L.consequenceRatings[val("cRating")]+` This part/process is designated as ${val("cPart")}. Risk consequence is focused on severity to ${val("cFocus")}. The following operational capability/objective will be affected: ${document.getElementById("cCapability").value}. ${document.getElementById("cTechnical").value} Risk consequence was determined using: ${val("cDetermined")}. ${val("cUpdate")}`;
+ document.getElementById("cOutput").textContent=s;
+}
+function generateL(){
+ const s=`${val("lRating")} This part/process is a ${val("lCSI")}. I reviewed the following Customer data sources: ${val("lCustomer")}. I reviewed the following DCMA data sources: ${val("lDCMA")}. I reviewed the following Contractor data sources: ${val("lContractor")}. The Customer data was overall ${val("lCustomerResult")}, the DCMA data was overall ${val("lDCMAResult")} and the contractor data was overall ${val("lContractorResult")}. ${document.getElementById("lAdditional").value}${val("lChanged")} ${val("lReview")} This risk statement was generated on: ${document.getElementById("lDate").value}`;
+ document.getElementById("lOutput").textContent=s;
+}
+function bind(ids,fn){ids.forEach(id=>document.getElementById(id).addEventListener("input",fn));ids.forEach(id=>document.getElementById(id).addEventListener("change",fn))}
+function resetConsequence(){document.getElementById("cCapability").value="";document.getElementById("cTechnical").value="";fill("cRating",L.consequenceRatings,0);fill("cPart",L.part,0);fill("cFocus",L.focus,1);fill("cDetermined",L.determination,0);fill("cUpdate",L.updates,0);generateC()}
+function resetLikelihood(){document.getElementById("lAdditional").value="";document.getElementById("lDate").value=new Date().toISOString().slice(0,10);fill("lCSI",L.part.slice(0,2),0);fill("lCustomer",L.customer,0);fill("lCustomerResult",L.results,1);fill("lDCMA",L.dcma,1);fill("lDCMAResult",L.results,0);fill("lContractor",L.contractor,1);fill("lContractorResult",L.results,1);fill("lRating",L.likelihoodRatings,2);fill("lChanged",L.changed,0);fill("lReview",L.review,1);generateL()}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{document.querySelectorAll(".tab,.panel").forEach(x=>x.classList.remove("active"));t.classList.add("active");document.getElementById(t.dataset.tab).classList.add("active")});
+resetConsequence();resetLikelihood();
+bind(["cRating","cPart","cFocus","cCapability","cTechnical","cDetermined","cUpdate"],generateC);
+bind(["lCSI","lCustomer","lCustomerResult","lDCMA","lDCMAResult","lContractor","lContractorResult","lRating","lAdditional","lChanged","lReview","lDate"],generateL);
+</script>
+</body>
+</html>
